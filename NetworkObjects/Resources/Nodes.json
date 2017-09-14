@@ -7,21 +7,21 @@
           "filter": {
             "in": "acldmz118"
           },
-          "nighbor": ["VRF1:1"],
+          "neighbors": ["VRF1:1"],
           "vlan": [ 118 ]
         },
         "dmz119": {
           "filter": {
             "in": "acldmz119"
           },
-          "nighbor": ["VRF1:4"],
+          "neighbors": ["VRF1:4"],
           "vlan": [ 119 ]
         },
         "dmz120": {
           "filter": {
             "in": "acldmz120"
           },
-          "nighbor": null,
+          "neighbors": null,
           "vlan": [ 120 ]
         }
       }
@@ -33,14 +33,14 @@
           "filter": {
             "in": "acldmz116"
           },
-          "nighbor": ["VRF1:4"],
+          "neighbors": ["VRF1:4"],
           "vlan": [ 116 ]
         },
         "dmz207": {
           "filter": {
             "in": "acldmz207"
           },
-          "nighbor": null,
+          "neighbors": null,
           "vlan": [ 207 ]
         }
       }

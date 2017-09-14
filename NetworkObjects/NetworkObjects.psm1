@@ -23,32 +23,75 @@ function Build-NetworkMap {
     # json 
     [void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
     $jsonSerializer = New-Object -TypeName System.Web.Script.Serialization.JavaScriptSerializer 
-    $jsonFile =  Get-Content $Path
 
     function deserializeJsonFile ($jsonFile) {
-      $jsonSerializer.MaxJsonLength = $jsonFile.Length
+      $jsonContents = Get-Content -Path $jsonFile -Raw
+	    $jsonSerializer.MaxJsonLength = $jsonContents.Length
       
       try {
-        $jsonObj = $jsonSerializer.DeserializeObject($jsonFile)
+        $jsonObj = $jsonSerializer.DeserializeObject($jsonContents)
       } catch {
-        Write-Error "Unable to deserialize specified file"
+        Write-Error "Unable to deserialize specified file: $_"
         break;
       }
 
       return $jsonObj
+
+    }
+
+    function updateNeighborReferences ($nodes) {
+
+      foreach ($nodeKey in $nodes.keys) {
+
+        foreach ($interfaceKey in $nodes[$nodeKey].interfaces.keys) {
+          
+          $validNeighbors = @{}
+          $invalidNeighbors = @()
+
+          foreach ($neighborKey in $nodes[$nodeKey].interfaces[$interfaceKey].neighbors) {
+            if ($nodes.ContainsKey($neighborKey)) {
+              $validNeighbors[$neighborKey] = $nodes[$neighborKey]
+            } else {
+              $invalidNeighbors += $neighborKey
+              Write-Error "Interface $interfaceKey on $nodeKey : $neighborKey is not a valid neighbor"
+            }
+
+          }
+
+          $nodes[$nodeKey].interfaces[$interfaceKey].neighbors = $validNeighbors
+          $nodes[$nodeKey].interfaces[$interfaceKey]["invalidNeighbors"] = $invalidNeighbors
+
+        }
+
+      }
+
+    }
+
+    function findPaths ($nodeMap, $nodePointer, $breadCrumbs = $null) {
+
     }
 
   }
 
   process {
     
-    $nodes = {}
+    $nodes = @{}
 
     foreach($file in (Get-ChildItem $Path -Filter "*.json")) {
+      
       $jsonNodes = deserializeJsonFile $file
+      
+      foreach ($nodeKey in $jsonNodes.nodes.keys) {
+
+        $nodes[$nodeKey] = $jsonNodes.nodes[$nodeKey]
+
+      }
+
     }
 
-    $jsonNodes
+    updateNeighborReferences $nodes
+
+    $Global:results = $nodes
   }
 }
 
