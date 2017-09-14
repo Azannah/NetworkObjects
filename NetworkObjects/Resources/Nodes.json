@@ -1,0 +1,62 @@
+{
+  "nodes": {
+    "bznfwlap01": {
+      "name": "bznfwlap01",
+      "interfaces": {
+        "dmz118": {
+          "filter": {
+            "in": "acldmz118"
+          },
+          "nighbor": ["VRF1:1"],
+          "vlan": [ 118 ]
+        },
+        "dmz119": {
+          "filter": {
+            "in": "acldmz119"
+          },
+          "nighbor": ["VRF1:4"],
+          "vlan": [ 119 ]
+        },
+        "dmz120": {
+          "filter": {
+            "in": "acldmz120"
+          },
+          "nighbor": null,
+          "vlan": [ 120 ]
+        }
+      }
+    },
+    "bznFWSM-T2": {
+      "name": "bznFWSM-T2",
+      "interfaces": {
+        "dmz116": {
+          "filter": {
+            "in": "acldmz116"
+          },
+          "nighbor": ["VRF1:4"],
+          "vlan": [ 116 ]
+        },
+        "dmz207": {
+          "filter": {
+            "in": "acldmz207"
+          },
+          "nighbor": null,
+          "vlan": [ 207 ]
+        }
+      }
+    },
+    "VRF1:4": {
+      "interfaces": {
+        "global": {
+          "filter": {
+            "in": null,
+            "out": null
+          },
+          "neighbors": [ "bznfwlap01", "bznFWSM-T2" ],
+          "vlan": [ ]
+        }
+      },
+      "name": "VRF1:4"
+    }
+  }
+}

@@ -4,10 +4,12 @@
 # You can download Pester from http://go.microsoft.com/fwlink/?LinkID=534084
 #
 
-Describe "Get-Function" {
-	Context "Function Exists" {
-		It "Should Return" {
-		
+Import-Module "C:\Users\matth\Source\GitHub\NetworkObjects\NetworkObjects\NetworkObject.psm1"
+
+Describe "Build-NetworkMap" {
+	Context "Given a valid json file" {
+		It "Should build a map" {
+		  Build-NetworkMap -Path "C:\Users\matth\Source\GitHub\NetworkObjects\NetworkObjects\Resources\Nodes.json"
 		}
 	}
 }
