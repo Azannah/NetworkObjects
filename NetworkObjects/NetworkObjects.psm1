@@ -40,6 +40,9 @@ function Build-NetworkMap {
     }
 
     function updateNeighborReferences ($nodes) {
+    <# 
+      2do: Check neighbors for backward references
+    #>
 
       foreach ($nodeKey in $nodes.keys) {
 
@@ -67,11 +70,59 @@ function Build-NetworkMap {
 
     }
 
-    function findPaths ($nodeMap, $nodePointer, $breadCrumbs = $null) {
+    function findPaths ($nodeMap, $nodePointer = $null, $breadCrumbs = @()) {
+      
+      # If nodePointer is null (first iteration) get starting node
+      if (-not $nodePointer) {
+        $nodePointer = $nodeMap[([Array]$nodeMap.keys)[0]]
+      }
 
-    }
+      # Store a map of which VLANs/network segments are available via which interface
+      $segmentMap = @{}
+      $nodePointer["segmentMap"] = $segmentMap
 
-  }
+      # Work through each interface on the current node
+      foreach ($interfaceKey in $nodePointer.interfaces.keys) {
+
+        $interface = $nodePointer.interfaces[$interfaceKey]
+
+        # Record each directly attached segment in the segmentMap
+        foreach ($segment in $interface.vlan) {
+
+          $segmentMap[$segment] = $interfaceKey
+
+        }
+
+        # Record each remotely attached segment in the segmentMap
+        foreach ($neighborKey in $interface.neighbors.keys) {
+
+          # Make sure we're not looping back to a node we've already visited
+          if (-not $breadCrumbs.Contains($neighborKey)) {
+
+            $neighbor = $interface.neighbors[$neighborKey]
+
+            findPaths $nodeMap $neighbor ($breadCrumbs.Add($nodePointer.name))
+
+            # Re-reference all segments available through neighbor
+            foreach ($neighborSegmentKey in $neighbor.segmentMap.keys) {
+              
+              # Make sure we don't already have a reference to a segment reachable through our neighbor
+              if (-not ([array]$segmentMap.Keys).Contains($neighborSegmentKey)) {
+                # Update the current node's segmentMap to indicate neighbors segments are available through that neighbor
+                $segmentMap[$neighborSegmentKey] = $neighborKey
+              }
+
+            } #end foreach ($neighborSegmentKey in $neighbor.segmentMap.keys)
+
+          } #end if (-not $breadCrumbs.Contains($neighborKey))
+
+        } #end foreach ($neighborKey in $interface.neighbors.keys)
+
+      } #end foreach ($interfaceKey in $nodePointer.interfaces.keys)
+
+    } #end function findPaths
+
+  } #end begin
 
   process {
     
@@ -90,6 +141,7 @@ function Build-NetworkMap {
     }
 
     updateNeighborReferences $nodes
+    findPaths $nodes
 
     $Global:results = $nodes
   }

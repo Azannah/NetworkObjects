@@ -8,12 +8,14 @@
 #$my_pwd = $env:HOMEPATH
 #$my_pwd = "repos", "GitHub" | ? { Test-Path "$pwd\source\$_" } | %{ "$pwd\source\$_\NetworkObjects\NetworkObjects" }
 
-Import-Module "$PWD\NetworkObjects\NetworkObjects.psm1"
+#Import-Module "$PWD\NetworkObjects\NetworkObjects.psm1"
+Import-Module "C:\Users\matth\Source\GitHub\NetworkObjects\NetworkObjects\NetworkObjects.psm1"
 
 Describe "Build-NetworkMap" {
 	Context "Given a valid json file" {
 		It "Should build a map" {
-		  Build-NetworkMap -Path "$PWD\NetworkObjects\Resources\Nodes.json"
+		  #Build-NetworkMap -Path "$PWD\NetworkObjects\Resources\Nodes.json"
+      Build-NetworkMap -Path "C:\Users\matth\Source\GitHub\NetworkObjects\NetworkObjects\Resources\Nodes.json"
 		}
 	}
 }
