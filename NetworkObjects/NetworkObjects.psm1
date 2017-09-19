@@ -1,4 +1,64 @@
 <#
+  Classes
+#>
+class NodeAccessList {
+
+  [String] $name = $null
+
+  NodeAccessList ([String] $name) {
+  
+    $this.name = $name
+
+  }
+
+}
+
+class NodeAccessLists {
+
+  [NodeAccessList] $ingress = $null
+  [NodeAccessList] $egress = $null
+
+  NodeAccessList () {
+    
+  }
+
+  NodeAccessLists ([NodeAccessList] $in, [NodeAccessList] $out) {
+
+    $this.ingress = $in
+    $this.egress = $out
+
+  }
+
+}
+
+class NodeInterface {
+  
+  [String] $name = $null
+  [NodeAccessLists] $accessList = $null
+  [NetworkNode[]] $neighbors
+  [String] $networkSegment = $null
+
+  NodeInterface ([String] $name, [NodeAccessLists] $acl, [NetworkNode[]] $neighbors, [String] $networkSegment) {
+    
+    $this.name = $name
+
+  }
+
+}
+
+class NetworkNode {
+  
+  # Properties
+  [String] $name = $null
+  [NodeInterface] $interfaces = $null
+
+  NetworkNode () {
+    
+  }
+
+}
+
+<#
 	My Function
 #>
 function Build-NetworkMap {
