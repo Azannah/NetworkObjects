@@ -1,6 +1,53 @@
 <#
   Classes
 #>
+
+using namespace System.Net;
+
+class IPAddressExtensions
+{
+    static [IPAddress] GetBroadcastAddress ([IPAddress] $address, [IPAddress] $subnetMask)
+    {
+        [byte[]] $ipAdressBytes = $address.GetAddressBytes();
+        [byte[]] $subnetMaskBytes = $subnetMask.GetAddressBytes();
+
+        if ($ipAdressBytes.Length -ne $subnetMaskBytes.Length) {
+          #throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
+        }
+
+        [byte[]] $broadcastAddress = [byte[]]::new($ipAdressBytes.Length);
+        for ([int] $i = 0; $i -lt $broadcastAddress.Length; $i++)
+        {
+            $broadcastAddress[$i] = [byte]($ipAdressBytes[$i] -bor ([Math]::Pow($subnetMaskBytes[$i], 255)));
+        }
+        return [IPAddress]::new($broadcastAddress);
+    }
+
+    static [IPAddress] GetNetworkAddress([IPAddress] $address, [IPAddress] $subnetMask)
+    {
+        byte[] ipAdressBytes = address.GetAddressBytes();
+        byte[] subnetMaskBytes = subnetMask.GetAddressBytes();
+
+        if (ipAdressBytes.Length != subnetMaskBytes.Length)
+            throw new ArgumentException("Lengths of IP address and subnet mask do not match.");
+
+        byte[] broadcastAddress = new byte[ipAdressBytes.Length];
+        for (int i = 0; i < broadcastAddress.Length; i++)
+        {
+            broadcastAddress[i] = (byte)(ipAdressBytes[i] & (subnetMaskBytes[i]));
+        }
+        return new IPAddress(broadcastAddress);
+    }
+
+    public static bool IsInSameSubnet(this IPAddress address2, IPAddress address, IPAddress subnetMask)
+    {
+        IPAddress network1 = address.GetNetworkAddress(subnetMask);
+        IPAddress network2 = address2.GetNetworkAddress(subnetMask);
+
+        return network1.Equals(network2);
+    }
+}
+
 class NodeAccessList {
 
   [String] $name = $null
@@ -13,7 +60,7 @@ class NodeAccessList {
 
 }
 
-class NodeAccessLists {
+class NodeFilter {
 
   [NodeAccessList] $ingress = $null
   [NodeAccessList] $egress = $null
@@ -34,11 +81,12 @@ class NodeAccessLists {
 class NodeInterface {
   
   [String] $name = $null
-  [NodeAccessLists] $accessList = $null
+  [ipaddress]
+  [NodeFilter] $accessList = $null
   [NetworkNode[]] $neighbors
   [String] $networkSegment = $null
 
-  NodeInterface ([String] $name, [NodeAccessLists] $acl, [NetworkNode[]] $neighbors, [String] $networkSegment) {
+  NodeInterface ([String] $name, [NodeFilter] $acl, [NetworkNode[]] $neighbors, [String] $networkSegment) {
     
     $this.name = $name
 
@@ -46,15 +94,74 @@ class NodeInterface {
 
 }
 
+class NodeLink {
+
+  []
+
+}
+
 class NetworkNode {
   
   # Properties
   [String] $name = $null
-  [NodeInterface] $interfaces = $null
+  [NodeInterface[]] $interfaces = @()
 
-  NetworkNode () {
+  NetworkNode ( [string] $nodeName ) {
     
+    $this.name = $nodeName
+
   }
+
+  [void] addInterface ([NodeInterface] $interface) {
+
+    $this.interfaces.Add($interface)
+
+  }
+
+}
+
+function _deserializeJsonFile ([System.IO.FileInfo] $jsonFile) {
+  
+  # Instantiate JavaScript Serializer (works with large files better than ConverFrom-Json)
+  [void][System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions")
+  $jsonSerializer = New-Object -TypeName System.Web.Script.Serialization.JavaScriptSerializer 
+
+  $jsonContents = Get-Content -Path $jsonFile -Raw
+	$jsonSerializer.MaxJsonLength = $jsonContents.Length
+      
+  try {
+    $jsonObj = $jsonSerializer.DeserializeObject($jsonContents)
+  } catch {
+    # 2do: better error handling
+    Write-Error "Unable to deserialize specified file: $_"
+    break;
+  }
+
+  return $jsonObj
+
+}
+
+function _buildNodeFromJson ([System.Management.Automation.PSCustomObject] $jsonNode) {
+
+}
+
+function _buildNodesFromFile ([System.IO.FileInfo] $jsonFile) {
+  
+  $nodes = @{}
+
+  $jsonNodes = _deserializeJsonFile $jsonFile
+
+  foreach ($nodeKey in $jsonNodes.nodes.keys) {
+
+    $nodes[$nodeKey] = _buildNodeFromJson $jsonNodes.nodes[$nodeKey]
+
+  }
+
+  return $nodes
+
+}
+
+function Get-NetworkNode {
 
 }
 
